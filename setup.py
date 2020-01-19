@@ -281,6 +281,9 @@ mssql = [
 mysql = [
     'mysqlclient>=1.3.6,<1.4',
 ]
+odbc = [
+    'pyodbc',
+]
 oracle = [
     'cx_Oracle>=5.1.2',
 ]
@@ -411,7 +414,7 @@ devel_minreq = cgroups + devel + doc + kubernetes + mysql + password
 devel_hadoop = devel_minreq + hdfs + hive + kerberos + presto + webhdfs
 devel_all = (all_dbs + atlas + aws + azure + celery + cgroups + datadog + devel +
              doc + docker + druid + elasticsearch + gcp + grpc + jdbc + jenkins +
-             kerberos + kubernetes + ldap + oracle + pagerduty + papermill +
+             kerberos + kubernetes + ldap + odbc + oracle + pagerduty + papermill +
              password + pinot + redis + salesforce + samba + segment + sendgrid +
              sentry + slack + snowflake + ssh + virtualenv + webhdfs + zendesk)
 
@@ -537,6 +540,7 @@ def do_setup():
             'mongo': mongo,
             'mssql': mssql,
             'mysql': mysql,
+            'odbc': odbc,
             'oracle': oracle,
             'pagerduty': pagerduty,
             'papermill': papermill,
