@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -223,6 +224,7 @@ gcp = [
     'google-cloud-dlp>=0.11.0',
     'google-cloud-kms>=1.2.1',
     'google-cloud-language>=1.1.1',
+    'google-cloud-logging>=1.14.0',
     'google-cloud-pubsub>=1.0.0',
     'google-cloud-redis>=0.3.0',
     'google-cloud-spanner>=1.10.0',
@@ -375,6 +377,7 @@ devel = [
     'click==6.7',
     'contextdecorator;python_version<"3.4"',
     'coverage',
+    'dumb-init>=1.2.2',
     'flake8>=3.6.0',
     'flake8-colors',
     'flaky',
@@ -413,9 +416,9 @@ devel_all = (all_dbs + atlas + aws + azure + celery + cgroups + datadog + devel 
              doc + docker + druid + elasticsearch + gcp + grpc + jdbc + jenkins +
              kerberos + kubernetes + ldap + odbc + oracle + pagerduty + papermill +
              password + pinot + redis + salesforce + samba + segment + sendgrid +
-             sentry + slack + snowflake + ssh + statsd + virtualenv + webhdfs + zendesk)
+             sentry + slack + snowflake + ssh + virtualenv + webhdfs + zendesk)
 
-# Snakebite are not Python 3 compatible :'(
+# Snakebite & Google Cloud Dataflow are not Python 3 compatible :'(
 if PY3:
     devel_ci = [package for package in devel_all if package not in
                 ['snakebite>=2.7.8', 'snakebite[kerberos]>=2.7.8']]
@@ -470,7 +473,6 @@ def do_setup():
             'json-merge-patch==0.2',
             'jsonschema~=3.0',
             'lazy_object_proxy~=1.3',
-            'lockfile>=0.12.2',
             'markdown>=2.5.2, <3.0',
             'pandas>=0.17.1, <1.0.0',
             'pendulum==1.4.4',
