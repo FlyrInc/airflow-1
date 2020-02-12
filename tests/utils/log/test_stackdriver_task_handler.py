@@ -116,9 +116,9 @@ class TestStackdriverLoggingHandlerTask(unittest.TestCase):
             mock.ANY, 'test-message', labels=labels, resource=resource
         )
 
-    @mock.patch(  # type: ignore
+    @mock.patch(
         'airflow.utils.log.stackdriver_task_handler.gcp_logging.Client',
-        **{'return_value.project': 'asf-project'}
+        **{'return_value.project': 'asf-project'}  # type: ignore
     )
     def test_should_read_logs_for_all_try(self, mock_client):
         mock_client.return_value.list_entries.return_value = _create_list_response(["MSG1", "MSG2"], None)
@@ -137,7 +137,7 @@ class TestStackdriverLoggingHandlerTask(unittest.TestCase):
 
     @mock.patch(  # type: ignore
         'airflow.utils.log.stackdriver_task_handler.gcp_logging.Client',
-        **{'return_value.project': 'asf-project'}
+        **{'return_value.project': 'asf-project'}  # type: ignore
     )
     def test_should_read_logs_for_task_with_quote(self, mock_client):
         mock_client.return_value.list_entries.return_value = _create_list_response(["MSG1", "MSG2"], None)
@@ -154,9 +154,9 @@ class TestStackdriverLoggingHandlerTask(unittest.TestCase):
         self.assertEqual(['MSG1\nMSG2'], logs)
         self.assertEqual([{'end_of_log': True}], metadata)
 
-    @mock.patch(  # type: ignore
+    @mock.patch(
         'airflow.utils.log.stackdriver_task_handler.gcp_logging.Client',
-        **{'return_value.project': 'asf-project'}
+        **{'return_value.project': 'asf-project'}  # type: ignore
     )
     def test_should_read_logs_for_single_try(self, mock_client):
         mock_client.return_value.list_entries.return_value = _create_list_response(["MSG1", "MSG2"], None)
@@ -207,9 +207,9 @@ class TestStackdriverLoggingHandlerTask(unittest.TestCase):
         self.assertEqual(['MSG1\nMSG2\nMSG3\nMSG4'], logs)
         self.assertEqual([{'end_of_log': True}], metadata1)
 
-    @mock.patch(  # type: ignore
+    @mock.patch(
         'airflow.utils.log.stackdriver_task_handler.gcp_logging.Client',
-        **{'return_value.project': 'asf-project'}
+        **{'return_value.project': 'asf-project'}  # type: ignore
     )
     def test_should_read_logs_with_custom_resources(self, mock_client):
         resource = Resource(
@@ -259,7 +259,7 @@ class TestStackdriverTaskHandlerAuthorization(unittest.TestCase):
         mock_client.assert_called_once_with(credentials=None, client_info=mock.ANY)
         self.assertEqual(mock_client.return_value, client)
 
-    @mock.patch("airflow.gcp.hooks.base.GoogleCloudBaseHook")
+    @mock.patch("airflow.providers.google.cloud.hooks.base.CloudBaseHook")
     @mock.patch('airflow.utils.log.stackdriver_task_handler.gcp_logging.Client')
     def test_should_support_gcp_conn_id(self, mock_client, mock_hook):
         stackdriver_task_handler = StackdriverTaskHandler(

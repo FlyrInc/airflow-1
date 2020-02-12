@@ -93,11 +93,11 @@ class StackdriverTaskHandler(logging.Handler):
 
     @cached_property
     def _client(self) -> gcp_logging.Client:
-        """Google Cloud Library API clinet"""
+        """Google Cloud Library API client"""
         if self.gcp_conn_id:
-            from airflow.gcp.hooks.base import GoogleCloudBaseHook
+            from airflow.providers.google.cloud.hooks.base import CloudBaseHook
 
-            hook = GoogleCloudBaseHook(gcp_conn_id=self.gcp_conn_id)
+            hook = CloudBaseHook(gcp_conn_id=self.gcp_conn_id)
             credentials = hook._get_credentials()  # pylint: disable=protected-access
         else:
             # Use Application Default Credentials
@@ -275,7 +275,6 @@ class StackdriverTaskHandler(logging.Handler):
             * token of the next page
         :rtype: Tuple[str, bool, str]
         """
-        print("FILTER=", log_filter)
         messages = []
         new_messages, next_page_token = self._read_single_logs_page(
             log_filter=log_filter,

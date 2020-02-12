@@ -204,20 +204,12 @@ if REMOTE_LOGGING:
         gcp_conn_id = conf.get('core', 'REMOTE_LOG_CONN_ID', fallback=None)
         # stackdriver:///airflow-tasks => airflow-tasks
         log_name = urlparse(REMOTE_BASE_LOG_FOLDER).path[1:]
-
-        resource = Resource(type="cloud_composer_environment", labels={
-            "environment_name": "polidea-composer-demo-28-11-2019",
-            "location": "europe-west3",
-            "project_id": "polidea-airflow"
-        })
-
         STACKDRIVER_REMOTE_HANDLERS = {
             'task': {
                 'class': 'airflow.utils.log.stackdriver_task_handler.StackdriverTaskHandler',
                 'formatter': 'airflow',
                 'name': log_name,
-                'gcp_conn_id': gcp_conn_id,
-                'resource': resource
+                'gcp_conn_id': gcp_conn_id
             }
         }
 
