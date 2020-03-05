@@ -21,8 +21,6 @@ import os
 from typing import Any, Dict, Union
 from urllib.parse import urlparse
 
-from google.cloud.logging.resource import Resource
-
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.utils.file import mkdirs

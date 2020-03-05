@@ -29,7 +29,7 @@ import traceback
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
-from urllib.parse import quote, unquote
+from urllib.parse import unquote
 
 import lazy_object_proxy
 import markdown
@@ -1488,7 +1488,7 @@ class Airflow(AirflowBaseView):
                                              'num_runs': num_runs})
         handler = get_task_log_reader()
         have_external_log_url = hasattr(handler, 'get_external_log_url')
-        print(f"have_external_log_url={have_external_log_url}" )
+        print(f"have_external_log_url={have_external_log_url}")
 
         return self.render_template(
             'airflow/tree.html',
@@ -1584,7 +1584,7 @@ class Airflow(AirflowBaseView):
 
         handler = get_task_log_reader()
         have_external_log_url = hasattr(handler, 'get_external_log_url')
-        print(f"have_external_log_url={have_external_log_url}" )
+        print(f"have_external_log_url={have_external_log_url}")
 
         return self.render_template(
             'airflow/graph.html',
