@@ -1,23 +1,26 @@
 import re
+import os
 from abc import ABC, abstractclassmethod
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from airflow.exceptions import AirflowException, AirflowConfigException
 from airflow.configuration import AirflowConfigParser, _UNSET
 
 class AirflowValidationException(AirflowException):
     pass
 
-
+# TODO: add WASB validator
 class RemoteSetupLogger(object):
     """
     [remote_logging]
     s3_enabled = 
-    s3_base_log_folder = 
+    s3_remote_log_folder = 
     s3_remote_log_conn_id =
     gcs_enabled =
     gcs_base_log_folder = 
     wasb_enabled = 
-    wasb_base_log_folder = 
+    wasb_remote_log_folder =
+    wasb_remote_log_conn_id =
+    wasb_logging_config_class = 
     elasticsearch_enabled = 
     elasticsearch_log_id_template = ,
     elasticsearch_end_of_log_mark = ,
@@ -35,21 +38,92 @@ class RemoteSetupLogger(object):
 
     def __init__(self):
         self.remote_logging: bool = False
+        self.section: str = 'remote_logging'
+        self.s3_enabled: str = 's3_enabled'
+        self.wasb_enabled: str = 'wasb_enabled'
 
     def setup_logging(self, logging_config: Dict[str, Any], config: AirflowConfigParser):
-        self.remote_logging = config.getboolean('logging', 'remote_logging')
+        if self.is_remote_logging_enabled(config):
+            filename_template: str = config.get('logging', 'LOG_FILENAME_TEMPLATE')
+            base_log_dir: str = config.get('logging', 'BASE_LOG_FOLDER')
+
+            is_s3_enabled = config.getboolean_with_default(self.section, self.s3_enabled, False)
+            if is_s3_enabled:
+                validator = S3Validator()
+                validator.validate(config)
+                s3_remote_handler: Dict[str, Dict[str, str]] = {
+                    'task': {
+                        'class': 'airflow.utils.log.s3_task_handler.S3TaskHandler',
+                        'formatter': 'airflow',
+                        'base_log_folder': str(os.path.expanduser(base_log_dir)),
+                        's3_log_folder': config.get(self.section, 's3_remote_log_folder'),
+                        'filename_template': filename_template,
+                    },
+                }
+                logging_config['handlers'].update(s3_remote_handler)
+
+            is_wasb_enabled = config.getboolean_with_default(self.section, self.wasb_enabled, False)
+            if is_wasb_enabled:
+                validator = WasbValidator()
+                validator.validate(config)
+                wasb_remote_handler: Dict[str, Dict[str, Union[str, bool]]] = {
+                    'task': {
+                        'class': 'airflow.utils.log.wasb_task_handler.WasbTaskHandler',
+                        'formatter': 'airflow',
+                        'base_log_folder': str(os.path.expanduser(base_log_dir)),
+                        'wasb_log_folder': config.get(self.section, 'wasb_remote_log_folder'),
+                        'wasb_container': 'airflow-logs',
+                        'filename_template': filename_template,
+                        'delete_local_copy': False,
+                    },
+                }
+                logging_config['handlers'].update(wasb_remote_handler)
+            
+    def is_remote_logging_enabled(self, config: AirflowConfigParser) -> bool:
+        return config.getboolean_with_default('logging', 'remote_logging', False)
+
 
 
 class AirflowConfigValidator(ABC):
+    def __init__(self):
+        self.section = 'remote_logging'
+
     @abstractclassmethod
     def validate(self, config: AirflowConfigParser):
         raise NotImplementedError()
 
 
+class WasbValidator(AirflowConfigValidator):
+    def __init__(self):
+        super().__init__()
+        self.wasb_enabled = 'wasb_enabled'
+        self.wasb_remote_log_folder = 'wasb_remote_log_folder'
+        self.wasb_remote_log_conn_id = 'wasb_remote_log_conn_id'
+        self.wasb_logging_config_class = 'wasb_logging_config_class'
+
+    def validate(self, config: AirflowConfigParser):
+        is_enabled = config.getboolean_with_default(self.section, self.wasb_enabled, False)
+        if is_enabled:
+            try:
+                self._validate_remote_log_folder(config)
+                config.get(self.section, self.wasb_remote_log_conn_id)
+                config.get(self.section, self.wasb_logging_config_class)
+            except ValueError as err:
+                raise AirflowValidationException(err)
+
+    def _validate_remote_log_folder(self, config: AirflowConfigParser):
+        try:
+            remote_log_folder = config.get(self.section, self.wasb_remote_log_folder)
+            if not re.match(r'^(wasb://).*', remote_log_folder):
+                raise AirflowValidationException(f'{self.wasb_remote_log_folder}: {remote_log_folder} is not valid Azure Blob Storage blob name. Valid name should match regex: ^(s3://).*')
+        except AirflowConfigException as err:
+            raise AirflowValidationException(err)
+
+
 class S3Validator(AirflowConfigValidator):
     def __init__(self):
-        self.section = 'remote_logging'
-        self.remote_log_folder = 's3_remote_log_folder'
+        super().__init__()
+        self.s3_remote_log_folder = 's3_remote_log_folder'
         self.s3_enabled = 's3_enabled'
         self.s3_encrypt_logs = 's3_encrypt_logs'
         self.s3_remote_log_conn_id = 's3_remote_log_conn_id'
@@ -66,9 +140,9 @@ class S3Validator(AirflowConfigValidator):
 
     def _validate_remote_log_folder(self, config: AirflowConfigParser):
         try:
-            remote_log_folder = config.get(self.section, self.remote_log_folder)
+            remote_log_folder = config.get(self.section, self.s3_remote_log_folder)
             if not re.match(r'^(s3://).*', remote_log_folder):
-                raise AirflowValidationException(f'{self.remote_log_folder}: {remote_log_folder} is not valid S3 bucket name. Valid name should match regex: ^(s3://).*')
+                raise AirflowValidationException(f'{self.s3_remote_log_folder}: {remote_log_folder} is not valid S3 bucket name. Valid name should match regex: ^(s3://).*')
         except AirflowConfigException as err:
             raise AirflowValidationException(err)
 

@@ -3,6 +3,7 @@ import pytest
 from airflow.utils.log.remote_setup_logger import S3Validator, AirflowValidationException
 from airflow.configuration import AirflowConfigParser
 from parameterized import parameterized
+from airflow.exceptions import AirflowConfigException
 
 
 DEFAULT_CONFIG = '''
@@ -91,9 +92,9 @@ class TestAirflowValidator(unittest.TestCase):
         validator = S3Validator()
         config = AirflowConfigParser()
         config.read_string(INVALID_S3_REMOTE_LOG_CONNECTION_ID_CONFIG)
-        expected_error_message = 'The value for configuration option "remote_logging:s3_remote_log_conn_id" is not a boolean (received "{}").'.format(encrypt_logs)
+        expected_error_message = 'section/key [remote_logging/s3_remote_log_conn_id] not found in config'
         # When
-        with pytest.raises(AirflowValidationException) as excinfo:
+        with pytest.raises(AirflowConfigException) as excinfo:
             validator.validate(config)
 
         # Then
