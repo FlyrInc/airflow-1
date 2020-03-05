@@ -299,6 +299,12 @@ class AirflowConfigParser(ConfigParser):
                 'The value for configuration option "{}:{}" is not a '
                 'boolean (received "{}").'.format(section, key, val))
 
+    def getboolean_with_default(self, section, key, default_value, **kwargs):
+        try:
+            return self.getboolean(section, key, **kwargs)
+        except AirflowConfigException:
+            return default_value
+
     def getint(self, section, key, **kwargs):
         return int(self.get(section, key, **kwargs))
 
